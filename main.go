@@ -18,6 +18,7 @@ func main() {
 	r.GET("/wechat/check", service.CheckWeixinSign)
 	r.POST("/wechat/check", service.TalkWeixin)
 	r.POST("/chat", service.Chat)
+	r.POST("/love_gpt/chat", service.LoveGPTChat)
 	r.Run(":8888")
 }
 
