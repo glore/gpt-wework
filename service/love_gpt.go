@@ -9,7 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/joho/godotenv/autoload"
-	gogpt "github.com/sashabaranov/go-gpt3"
+	gogpt "github.com/sashabaranov/go-openai"
 )
 
 // 聊天缓存
@@ -49,7 +49,15 @@ func LoveGPTService(question, userId string, size int) (string, error) {
 		messages = data.([]gogpt.ChatCompletionMessage)
 	}
 	messages = append(messages, gogpt.ChatCompletionMessage{
+		Role:    "assistant",
+		Content: "你好，我是福恋的人工智能客服小恋, 可以帮你解决福恋产品使用问题，简单的情感问题也可以先问一下我哦！",
+	})
+	messages = append(messages, gogpt.ChatCompletionMessage{
 		Role:    "system",
+		Content: "福恋以深圳为核心，目前已辐射周边地区进行线下交友活动。透过运动、共创坊、兴趣互动、美食分享、户外探索等不同主题，针对性进行用户邀请。结合大数据分析，邀请参与用户的心仪嘉宾，建立一个轻松、活跃的交友现场。 福恋微信公众号是“福恋”。福恋的官网是: https://www.fulllinkai.com ，可以去各大应用市场搜索“福恋”，下载福恋App安装。福恋智能平台提供如下服务：1. 人工牵线，2.全方位测评 3. 情感咨询 4. 脱单高端定制 5.婚前辅导. 如果需要了解更多关于福恋的服务欢迎关注福恋微信公众号，或福恋客服小天使的微信：ploves004.",
+	})
+	messages = append(messages, gogpt.ChatCompletionMessage{
+		Role:    "user",
 		Content: question,
 	})
 	fmt.Println("用户id:"+userId, messages)
@@ -81,9 +89,11 @@ func LoveGPTService(question, userId string, size int) (string, error) {
 
 func (c *LoveGPT) Request(messages []gogpt.ChatCompletionMessage) (answer string, err error) {
 	var msg = gogpt.ChatCompletionMessage{}
-	msg.Role = "system"
+	msg.Role = "user"
+	
 	req := gogpt.ChatCompletionRequest{
 		Model:    gogpt.GPT3Dot5Turbo,
+		//Model:    gogpt.GPT4,
 		Messages: messages,
 	}
 	resp, err := c.client.CreateChatCompletion(c.ctx, req)

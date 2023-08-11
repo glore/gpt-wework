@@ -6,7 +6,7 @@ require (
 	github.com/gin-gonic/gin v1.8.1
 	github.com/joho/godotenv v1.5.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
-	github.com/sashabaranov/go-gpt3 v1.3.0
+	github.com/sashabaranov/go-openai v1.14.1
 )
 
 require (
