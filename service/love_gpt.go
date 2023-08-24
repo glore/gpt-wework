@@ -19,21 +19,23 @@ type LoveGPT struct {
 	client *gogpt.Client
 	ctx    context.Context
 	userId string
+	model  string
 }
 
 // LoveGPTChat 小恋
 func LoveGPTChat(c *gin.Context) {
 	question := c.PostForm("question")
 	userId := c.PostForm("userId")
+	model := c.PostForm("model")
 	if len(question) == 0 {
-		result.Fail(c, result.ResponseJson{Msg: "err:question"})
+		result.Fail(c, result.ResponseJson{Msg: "参数错误"})
 		return
 	}
 	if len(userId) == 0 {
-		result.Fail(c, result.ResponseJson{Msg: "err:userId"})
+		result.Fail(c, result.ResponseJson{Msg: "参数错误"})
 		return
 	}
-	ret, err := LoveGPTService(question, userId, weworkConversationSize)
+	ret, err := LoveGPTService(question, userId, model, weworkConversationSize)
 	if err != nil {
 		result.Fail(c, result.ResponseJson{Msg: err.Error()})
 		return
@@ -41,7 +43,7 @@ func LoveGPTChat(c *gin.Context) {
 	result.Success(c, result.ResponseJson{Data: ret})
 }
 
-func LoveGPTService(question, userId string, size int) (string, error) {
+func LoveGPTService(question, userId string, model string, size int) (string, error) {
 	var messages []gogpt.ChatCompletionMessage
 	key := fmt.Sprintf("cache:love_gpt:chat:%s", userId)
 	data, found := loveGPTChatCache.Get(key)
@@ -60,7 +62,7 @@ func LoveGPTService(question, userId string, size int) (string, error) {
 		Role:    "user",
 		Content: question,
 	})
-	fmt.Println("用户id:"+userId, messages)
+	//fmt.Println("用户id:"+userId, messages)
 	pivot := size
 	if pivot > len(messages) {
 		pivot = len(messages)
@@ -77,6 +79,7 @@ func LoveGPTService(question, userId string, size int) (string, error) {
 		client: gogpt.NewClient(openAiKey),
 		ctx:    ctx,
 		userId: userId,
+		model:  model,
 	}
 
 	defer chat.ctx.Done()
@@ -90,12 +93,15 @@ func LoveGPTService(question, userId string, size int) (string, error) {
 func (c *LoveGPT) Request(messages []gogpt.ChatCompletionMessage) (answer string, err error) {
 	var msg = gogpt.ChatCompletionMessage{}
 	msg.Role = "user"
-	
+
 	req := gogpt.ChatCompletionRequest{
-		Model:    gogpt.GPT3Dot5Turbo,
+		Model: gogpt.GPT3Dot5Turbo,
 		//Model:    gogpt.GPT4,
 		Temperature: 0.8,
-		Messages: messages,
+		Messages:    messages,
+	}
+	if len(c.model) > 0 {
+		req.Model = c.model
 	}
 	resp, err := c.client.CreateChatCompletion(c.ctx, req)
 	if err != nil {
